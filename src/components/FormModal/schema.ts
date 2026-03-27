@@ -32,13 +32,3 @@ export const transactionSchema = object({
 })
 
 export type TransactionFormData = InferType<typeof transactionSchema>;
-
-export const defaultValues: TransactionFormData = {
-    id: crypto.randomUUID(),
-    title: "",
-    price: 0,
-    type: "INCOME",
-    category: "",
-    data: new Date(),
-}
-

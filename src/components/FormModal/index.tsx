@@ -2,34 +2,55 @@ import { ITransaction } from "@/types/transaction";
 import { Input } from "../Form/Input";
 import { TransactionSwitcher } from "../TransactionSwitcher";
 import { TransactionType } from "@/types/transaction";
-import { TransactionFormData, transactionSchema, defaultValues } from "./schema";
+import { TransactionFormData, transactionSchema } from "./schema";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect } from "react";
+
+const getEmptyTransactionFormData = (): TransactionFormData => ({
+  id: crypto.randomUUID(),
+  title: "",
+  price: 0,
+  type: "INCOME",
+  category: "",
+  data: new Date(),
+});
 
 export type FormModalProps = {
    title: string;
-   closeModal: () => void;
-   addTransaction: (transaction: ITransaction) => void;
+    closeModal: () => void;
+    submitTransaction: (transaction: ITransaction) => void;
+    transaction?: ITransaction;
 }
 
-export const FormModal = ({ title, closeModal, addTransaction }: FormModalProps) => {
-  
+export const FormModal = ({ title, closeModal, submitTransaction, transaction }: FormModalProps) => {
   const {
     handleSubmit,
     register,
     formState: { errors},
     setValue,
-    watch
+    watch,
+    reset
   } = useForm<TransactionFormData>({
     resolver: yupResolver(transactionSchema),
-    defaultValues
+    defaultValues: getEmptyTransactionFormData(),
   })  
+
+  useEffect(() => {
+    if (transaction) {
+      reset(transaction);
+      return;
+    }
+
+    reset(getEmptyTransactionFormData());
+  }, [transaction, reset]);
+
   const handleTypeChange = (type: TransactionType) => {
     setValue("type", type);
   }
 
   const handleSubmitForm = (data: TransactionFormData) => {
-    addTransaction(data as ITransaction);
+    submitTransaction(data as ITransaction);
     closeModal();
   }
 
@@ -49,7 +70,7 @@ export const FormModal = ({ title, closeModal, addTransaction }: FormModalProps)
 
        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div className="relative transform overflow-hidden rounder-lg  bg-modal text-left shadow-xl sm:w-full sm:max-w-lg">
+                <div className="relative transform overflow-hidden rounded-lg  bg-modal text-left shadow-xl sm:w-full sm:max-w-lg">
                     <button type="button" className="absolute top-0 right-0 mt-4 mr-5 text-gray-400 hover:text-gray-600"
                      onClick={closeModal}
                      aria-label="Fechar"
@@ -93,10 +114,9 @@ export const FormModal = ({ title, closeModal, addTransaction }: FormModalProps)
                         <Input 
                            type="text"
                            placeholder="Categoria"  
-                           {...register("category")} 
-                            error={errors.category?.message}
+                            {...register("category")} 
+                             error={errors.category?.message}
                         />
-                         
                         <button 
                            type="submit"
                            className="mt-6 mb-16 w-full justify-center rounded-md bg-income text-white px-3 py-5 text-normal font-semibold shadow-sm hover:opacity-80"
