@@ -1,10 +1,11 @@
 'use client';
 import { BodyContainer } from "@/components/BodyContainer";
 import { CardContainer } from "@/components/CardContainer";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { FormModal } from "@/components/FormModal";
 import { Header } from "@/components/Header";
 import { Table } from "@/components/Table";
-import { ITransaction, TotalCard } from "@/types/transaction";
+import type { ITransaction, TotalCard } from "@/types/transaction";
 import { useMemo, useState } from "react";
 
 const transactions:ITransaction[] = [
@@ -44,11 +45,64 @@ const transactions:ITransaction[] = [
 
 export default function Home() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [transactionData, setTransactionData] = useState(transactions);
+  const [selectedTransaction, setSelectedTransaction] = useState<ITransaction | null>(null);
 
   const handleAddTransaction = (transaction: ITransaction) => {
     setTransactionData( (prevState)=> [...prevState, transaction]);
   }
+
+  const handleUpdateTransaction = (transaction: ITransaction) => {
+    setTransactionData((prevState) =>
+      prevState.map((item) => (item.id === transaction.id ? transaction : item))
+    );
+  };
+
+  const handleSaveTransaction = (transaction: ITransaction) => {
+    if (selectedTransaction) {
+      handleUpdateTransaction(transaction);
+      return;
+    }
+
+    handleAddTransaction(transaction);
+  };
+
+  const handleOpenCreateModal = () => {
+    setSelectedTransaction(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenEditModal = (transaction: ITransaction) => {
+    setSelectedTransaction(transaction);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenDeleteModal = (transaction: ITransaction) => {
+    setSelectedTransaction(transaction);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!selectedTransaction) {
+      setIsDeleteModalOpen(false);
+      return;
+    }
+
+    setTransactionData((prevState) => prevState.filter((item) => item.id !== selectedTransaction.id));
+    setSelectedTransaction(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleCloseFormModal = () => {
+    setIsFormModalOpen(false);
+    setSelectedTransaction(null);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedTransaction(null);
+  };
 
   const calculaTotal = useMemo(() => {
     const totals = transactionData.reduce<TotalCard>((acc, transaction) => {
@@ -67,15 +121,29 @@ export default function Home() {
   
   return (
     <div className="h-full min-h-screen">
-      <Header handleOpenFormModal={() => setIsFormModalOpen(true)}/>
+      <Header handleOpenFormModal={handleOpenCreateModal}/>
       <BodyContainer>
          <CardContainer totalValues={calculaTotal} />
-         <Table data={transactionData} />
+         <Table
+            data={transactionData}
+            onEditTransaction={handleOpenEditModal}
+            onDeleteTransaction={handleOpenDeleteModal}
+          />
       </BodyContainer>
       {isFormModalOpen && <FormModal 
-          closeModal={() => setIsFormModalOpen(false)} 
-          title="Criar Transação" 
-          addTransaction={handleAddTransaction} />}
+          closeModal={handleCloseFormModal}
+          title={selectedTransaction ? "Editar Transação" : "Criar Transação"}
+          onSubmitTransaction={handleSaveTransaction}
+          initialValues={selectedTransaction ?? undefined}
+        />}
+      {isDeleteModalOpen && selectedTransaction && (
+        <ConfirmModal
+          title="Excluir transação"
+          description={`Tem certeza que deseja excluir a transação "${selectedTransaction.title}"?`}
+          onCancel={handleCloseDeleteModal}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
     </div>
   );
 }

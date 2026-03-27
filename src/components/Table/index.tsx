@@ -1,10 +1,12 @@
-import { ITransaction } from "@/types/transaction"
+import type { ITransaction } from "@/types/transaction"
 import { formatDate, formatPrice } from "@/utils"
 
 export type TableProps = {
     data: ITransaction[]
+    onEditTransaction: (transaction: ITransaction) => void;
+    onDeleteTransaction: (transaction: ITransaction) => void;
 }
-export const Table = ({ data }: TableProps) => {
+export const Table = ({ data, onEditTransaction, onDeleteTransaction }: TableProps) => {
     return <>
         <table className="w-full mt-16 border-separate border-spacing-y-2">
             <thead>
@@ -13,6 +15,7 @@ export const Table = ({ data }: TableProps) => {
                    <th className="px-4 text-left text-table-header text-base font-medium">Preço</th> 
                    <th className="px-4 text-left text-table-header text-base font-medium">Categoria</th> 
                    <th className="px-4 text-left text-table-header text-base font-medium">Data</th> 
+                   <th className="px-4 text-right text-table-header text-base font-medium">Ações</th> 
                 </tr>
             </thead> 
             <tbody>
@@ -21,7 +24,25 @@ export const Table = ({ data }: TableProps) => {
                    <td className="px-4 py-4 whitespace-nowrap text-title bg-white rounded-l-lg">{transaction.title} </td> 
                    <td className={`px-4 py-4 whitespace-nowrap ${transaction.type === "INCOME"? "text-income": "text-outcome"} bg-white text-right`}>{formatPrice(transaction.price)} </td> 
                    <td className="px-4 py-4 whitespace-nowrap text-title bg-white">{transaction.category} </td>
-                   <td className="px-4 py-4 whitespace-nowrap text-title bg-white rounded-r-lg">{formatDate(transaction.data)} </td>
+                   <td className="px-4 py-4 whitespace-nowrap text-title bg-white">{formatDate(transaction.data)} </td>
+                   <td className="px-4 py-4 whitespace-nowrap text-title bg-white rounded-r-lg">
+                      <div className="flex items-center justify-end gap-4">
+                        <button
+                          type="button"
+                          className="text-button hover:opacity-80 font-medium"
+                          onClick={() => onEditTransaction(transaction)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="text-outcome hover:opacity-80 font-medium"
+                          onClick={() => onDeleteTransaction(transaction)}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                   </td>
                 </tr>
                ))} 
             </tbody>

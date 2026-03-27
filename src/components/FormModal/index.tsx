@@ -1,35 +1,49 @@
-import { ITransaction } from "@/types/transaction";
+import type { ITransaction } from "@/types/transaction";
 import { Input } from "../Form/Input";
 import { TransactionSwitcher } from "../TransactionSwitcher";
-import { TransactionType } from "@/types/transaction";
-import { TransactionFormData, transactionSchema, defaultValues } from "./schema";
+import type { TransactionType } from "@/types/transaction";
+import { transactionSchema, createDefaultValues } from "./schema";
+import type { TransactionFormData } from "./schema";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect } from "react";
 
 export type FormModalProps = {
    title: string;
    closeModal: () => void;
-   addTransaction: (transaction: ITransaction) => void;
+   onSubmitTransaction: (transaction: ITransaction) => void;
+   initialValues?: ITransaction;
 }
 
-export const FormModal = ({ title, closeModal, addTransaction }: FormModalProps) => {
+export const FormModal = ({ title, closeModal, onSubmitTransaction, initialValues }: FormModalProps) => {
   
   const {
     handleSubmit,
     register,
     formState: { errors},
     setValue,
-    watch
+    watch,
+    reset
   } = useForm<TransactionFormData>({
     resolver: yupResolver(transactionSchema),
-    defaultValues
+    defaultValues: initialValues ?? createDefaultValues()
   })  
+
+  useEffect(() => {
+    if (initialValues) {
+      reset(initialValues);
+      return;
+    }
+
+    reset(createDefaultValues());
+  }, [initialValues, reset]);
+
   const handleTypeChange = (type: TransactionType) => {
     setValue("type", type);
   }
 
   const handleSubmitForm = (data: TransactionFormData) => {
-    addTransaction(data as ITransaction);
+    onSubmitTransaction(data as ITransaction);
     closeModal();
   }
 

@@ -1,4 +1,5 @@
-import { object, number, string, date, InferType } from "yup";
+import { object, number, string, date } from "yup";
+import type { InferType } from "yup";
 
 export const transactionSchema = object({
    id: string()
@@ -8,7 +9,7 @@ export const transactionSchema = object({
     .required("O título é obrigatório")
     .min(5, "O título deve conter no mínimo 5 caracteres"),
    price: number()
-    .transform((value, originalValue) => {
+    .transform((_value, originalValue) => {
         if (originalValue ===  "" || 
             originalValue === null|| 
             originalValue === undefined) {
@@ -33,12 +34,12 @@ export const transactionSchema = object({
 
 export type TransactionFormData = InferType<typeof transactionSchema>;
 
-export const defaultValues: TransactionFormData = {
-    id: crypto.randomUUID(),
-    title: "",
-    price: 0,
-    type: "INCOME",
-    category: "",
-    data: new Date(),
-}
+export const createDefaultValues = (): TransactionFormData => ({
+  id: crypto.randomUUID(),
+  title: "",
+  price: 0,
+  type: "INCOME",
+  category: "",
+  data: new Date(),
+});
 
